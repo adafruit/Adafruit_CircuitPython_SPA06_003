@@ -239,7 +239,9 @@ class SPA06_003_I2C:
     _temperature_bits = ROBits(
         24, SPA06_003_REG_TMP_B2, 0, register_width=3, lsb_first=False, signed=True
     )
-    _temperature = ROUnaryStruct(SPA06_003_REG_TMP_B2, "<3s")
+    _pressure_bits = ROBits(
+        24, SPA06_003_REG_PSR_B2, 0, register_width=3, lsb_first=False, signed=True
+    )
 
     def __init__(self, i2c_bus: I2C, address: int = SPA06_003_DEFAULT_ADDR):
         try:
@@ -295,6 +297,47 @@ class SPA06_003_I2C:
         temp_comp = float(self.coeff_c0) * 0.5 + float(self.coeff_c1) * temp_raw_sc
 
         return temp_comp
+
+    @property
+    def pressure(self):
+        """Pressure in hPa"""
+        # Get raw temp and pressure values
+        temp_raw_signed = self._temperature_bits
+        pres_raw_signed = self._pressure_bits
+
+        # Get scaling factors
+        kP = SPA06_003_SCALING_FACTORS_LUT[self.pressure_oversampling]
+        kT = SPA06_003_SCALING_FACTORS_LUT[self.temperature_oversampling]
+
+        # Calculate scaled measurement results
+        pres_raw_sc = float(pres_raw_signed) / kP
+        temp_raw_sc = float(temp_raw_signed) / kT
+
+        # Calculate powers of Praw_sc for the compensation formula
+        pres_raw_sc_2 = pres_raw_sc * pres_raw_sc
+        pres_raw_sc_3 = pres_raw_sc_2 * pres_raw_sc
+        pres_raw_sc_4 = pres_raw_sc_3 * pres_raw_sc
+
+        # Calculate compensated pressure using the formula:
+        # Pcomp = c00 + c10*Praw_sc + c20*Praw_sc^2 + c30*Praw_sc^3 + c40*Praw_sc^4 +
+        #        Traw_sc*(c01 + c11*Praw_sc + c21*Praw_sc^2 + c31*Praw_sc^3)
+        pres_comp = (
+            float(self.coeff_c00)
+            + float(self.coeff_c10) * pres_raw_sc
+            + float(self.coeff_c20) * pres_raw_sc_2
+            + float(self.coeff_c30) * pres_raw_sc_3
+            + float(self.coeff_c40) * pres_raw_sc_4
+            + temp_raw_sc
+            * (
+                float(self.coeff_c01)
+                + float(self.coeff_c11) * pres_raw_sc
+                + float(self.coeff_c21) * pres_raw_sc_2
+                + float(self.coeff_c31) * pres_raw_sc_3
+            )
+        )
+
+        # Convert from Pa to hPa (divide by 100)
+        return pres_comp / 100.0
 
     @property
     def pressure_oversampling(self):
