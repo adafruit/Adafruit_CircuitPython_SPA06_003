@@ -43,53 +43,53 @@ from adafruit_register.i2c_bit import ROBit, RWBit
 from adafruit_register.i2c_struct import ROUnaryStruct
 from adafruit_bus_device.i2c_device import I2CDevice
 
-SPA06_003_DEFAULT_ADDR = 0x77
-SPA06_003_ALTERNATE_ADDR = 0x76
-SPA06_003_DEFAULT_SPIFREQ = 1000000  # 1 MHz
+SPA06_003_DEFAULT_ADDR = const(0x77)
+SPA06_003_ALTERNATE_ADDR = const(0x76)
+SPA06_003_DEFAULT_SPIFREQ = const(1000000)  # 1 MHz
 
 # Pressure data registers
-SPA06_003_REG_PSR_B2 = 0x00  # Pressure data byte 2 (MSB)
-SPA06_003_REG_PSR_B1 = 0x01  # Pressure data byte 1
-SPA06_003_REG_PSR_B0 = 0x02  # Pressure data byte 0 (LSB)
+SPA06_003_REG_PSR_B2 = const(0x00)  # Pressure data byte 2 (MSB)
+SPA06_003_REG_PSR_B1 = const(0x01)  # Pressure data byte 1
+SPA06_003_REG_PSR_B0 = const(0x02)  # Pressure data byte 0 (LSB)
 
 # Temperature data registers
-SPA06_003_REG_TMP_B2 = 0x03  # Temperature data byte 2 (MSB)
-SPA06_003_REG_TMP_B1 = 0x04  # Temperature data byte 1
-SPA06_003_REG_TMP_B0 = 0x05  # Temperature data byte 0 (LSB)
+SPA06_003_REG_TMP_B2 = const(0x03)  # Temperature data byte 2 (MSB)
+SPA06_003_REG_TMP_B1 = const(0x04)  # Temperature data byte 1
+SPA06_003_REG_TMP_B0 = const(0x05)  # Temperature data byte 0 (LSB)
 
 # Configuration registers
-SPA06_003_REG_PRS_CFG = 0x06  # Pressure configuration register
-SPA06_003_REG_TMP_CFG = 0x07  # Temperature configuration register
-SPA06_003_REG_MEAS_CFG = 0x08  # Measurement configuration register
-SPA06_003_REG_CFG_REG = 0x09  # General configuration register
+SPA06_003_REG_PRS_CFG = const(0x06)  # Pressure configuration register
+SPA06_003_REG_TMP_CFG = const(0x07)  # Temperature configuration register
+SPA06_003_REG_MEAS_CFG = const(0x08)  # Measurement configuration register
+SPA06_003_REG_CFG_REG = const(0x09)  # General configuration register
 
 # Status registers
-SPA06_003_REG_INT_STS = 0x0A  # Interrupt status register
-SPA06_003_REG_FIFO_STS = 0x0B  # FIFO status register
+SPA06_003_REG_INT_STS = const(0x0A)  # Interrupt status register
+SPA06_003_REG_FIFO_STS = const(0x0B)  # FIFO status register
 
 # Control registers
-SPA06_003_REG_RESET = 0x0C  # Reset register
-SPA06_003_REG_ID = 0x0D  # Chip ID register
+SPA06_003_REG_RESET = const(0x0C)  # Reset register
+SPA06_003_REG_ID = const(0x0D)  # Chip ID register
 
 # Calibration coefficient registers
-SPA06_003_REG_COEF_C0 = 0x10  # Calibration coefficients C0 start address
-SPA06_003_REG_COEF_C1 = 0x11  # Calibration coefficients C1 start address
-SPA06_003_REG_COEF_C00 = 0x13  # Calibration coefficients C00 start address
-SPA06_003_REG_COEF_C10 = 0x15  # Calibration coefficients C10 start address
-SPA06_003_REG_COEF_C01 = 0x18  # Calibration coefficients C01 start address
-SPA06_003_REG_COEF_C11 = 0x1A  # Calibration coefficients C11 start address
-SPA06_003_REG_COEF_C20 = 0x1C  # Calibration coefficients C20 start address
-SPA06_003_REG_COEF_C21 = 0x1E  # Calibration coefficients C21 start address
-SPA06_003_REG_COEF_C30 = 0x20  # Calibration coefficients C30 start address
-SPA06_003_REG_COEF_C31 = 0x22  # Calibration coefficients C31 start address
-SPA06_003_REG_COEF_C40 = 0x23  # Calibration coefficients C40 start address
+SPA06_003_REG_COEF_C0 = const(0x10)  # Calibration coefficients C0 start address
+SPA06_003_REG_COEF_C1 = const(0x11)  # Calibration coefficients C1 start address
+SPA06_003_REG_COEF_C00 = const(0x13)  # Calibration coefficients C00 start address
+SPA06_003_REG_COEF_C10 = const(0x15)  # Calibration coefficients C10 start address
+SPA06_003_REG_COEF_C01 = const(0x18)  # Calibration coefficients C01 start address
+SPA06_003_REG_COEF_C11 = const(0x1A)  # Calibration coefficients C11 start address
+SPA06_003_REG_COEF_C20 = const(0x1C)  # Calibration coefficients C20 start address
+SPA06_003_REG_COEF_C21 = const(0x1E)  # Calibration coefficients C21 start address
+SPA06_003_REG_COEF_C30 = const(0x20)  # Calibration coefficients C30 start address
+SPA06_003_REG_COEF_C31 = const(0x22)  # Calibration coefficients C31 start address
+SPA06_003_REG_COEF_C40 = const(0x23)  # Calibration coefficients C40 start address
 
 # Interrupt status flag definitions
-SPA06_003_INT_FIFO_FULL = 0x04  # FIFO full flag
-SPA06_003_INT_TMP_RDY = 0x02  # Temperature measurement ready flag
-SPA06_003_INT_PRS_RDY = 0x01  # Pressure measurement ready flag
+SPA06_003_INT_FIFO_FULL = const(0x04)  # FIFO full flag
+SPA06_003_INT_TMP_RDY = const(0x02)  # Temperature measurement ready flag
+SPA06_003_INT_PRS_RDY = const(0x01)  # Pressure measurement ready flag
 
-SPA06_003_CMD_RESET = 0x09
+SPA06_003_CMD_RESET = const(0x09)
 
 # Measurement rate options
 SPA06_003_RATE_1 = const(0x00)  # 1 measurements per second
@@ -151,7 +151,7 @@ class SPA06_003_I2C:
 
     coeff_ready = ROBit(SPA06_003_REG_MEAS_CFG, 7)
     sensor_ready = ROBit(SPA06_003_REG_MEAS_CFG, 6)
-    
+
     _coeff_c0 = ROBits(12, SPA06_003_REG_COEF_C0, 4, register_width=2, lsb_first=False, signed=True)
     _coeff_c1 = ROBits(12, SPA06_003_REG_COEF_C1, 0, register_width=2, lsb_first=False, signed=True)
     _coeff_c00 = ROBits(20, SPA06_003_REG_COEF_C00, 4, register_width=3, lsb_first=False, signed=True)
