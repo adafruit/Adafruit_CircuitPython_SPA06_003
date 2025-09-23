@@ -32,14 +32,16 @@ Implementation Notes
 """
 
 import time
-from micropython import const
-from adafruit_register.i2c_bits import ROBits, RWBits
-from adafruit_register.i2c_bit import ROBit, RWBit
-from adafruit_register.i2c_struct import ROUnaryStruct
+
 from adafruit_bus_device.i2c_device import I2CDevice
+from adafruit_register.i2c_bit import ROBit, RWBit
+from adafruit_register.i2c_bits import ROBits, RWBits
+from adafruit_register.i2c_struct import ROUnaryStruct
+from micropython import const
 
 try:
     import typing
+
     from busio import I2C
 except ImportError:
     pass
@@ -127,9 +129,15 @@ SPA06_003_OVERSAMPLE_128 = const(0x07)  # 128 times
 SPA06_003_MEAS_MODE_IDLE = const(0x00)  # Idle / Stop background measurement
 SPA06_003_MEAS_MODE_PRESSURE = const(0x01)  # Pressure measurement (Command Mode)
 SPA06_003_MEAS_MODE_TEMPERATURE = const(0x02)  # Temperature measurement (Command Mode)
-SPA06_003_MEAS_MODE_CONTINUOUS_PRESSURE = const(0x05)  # Continuous pressure measurement (Background Mode)
-SPA06_003_MEAS_MODE_CONTINUOUS_TEMPERATURE = const(0x06)  # Continuous temperature measurement (Background Mode)
-SPA06_003_MEAS_MODE_CONTINUOUS_BOTH = const(0x07)  # Continuous pressure and temperature measurement (Background Mode)
+SPA06_003_MEAS_MODE_CONTINUOUS_PRESSURE = const(
+    0x05
+)  # Continuous pressure measurement (Background Mode)
+SPA06_003_MEAS_MODE_CONTINUOUS_TEMPERATURE = const(
+    0x06
+)  # Continuous temperature measurement (Background Mode)
+SPA06_003_MEAS_MODE_CONTINUOUS_BOTH = const(
+    0x07
+)  # Continuous pressure and temperature measurement (Background Mode)
 
 # Interrupt polarity options
 SPA06_003_INT_ACTIVE_LOW = const(0x00)  # Interrupt active low
@@ -170,15 +178,33 @@ class SPA06_003_I2C:
 
     _coeff_c0 = ROBits(12, SPA06_003_REG_COEF_C0, 4, register_width=2, lsb_first=False, signed=True)
     _coeff_c1 = ROBits(12, SPA06_003_REG_COEF_C1, 0, register_width=2, lsb_first=False, signed=True)
-    _coeff_c00 = ROBits(20, SPA06_003_REG_COEF_C00, 4, register_width=3, lsb_first=False, signed=True)
-    _coeff_c10 = ROBits(20, SPA06_003_REG_COEF_C10, 0, register_width=3, lsb_first=False, signed=True)
-    _coeff_c01 = ROBits(16, SPA06_003_REG_COEF_C01, 0, register_width=2, lsb_first=False, signed=True)
-    _coeff_c11 = ROBits(16, SPA06_003_REG_COEF_C11, 0, register_width=2, lsb_first=False, signed=True)
-    _coeff_c20 = ROBits(16, SPA06_003_REG_COEF_C20, 0, register_width=2, lsb_first=False, signed=True)
-    _coeff_c21 = ROBits(16, SPA06_003_REG_COEF_C21, 0, register_width=2, lsb_first=False, signed=True)
-    _coeff_c30 = ROBits(16, SPA06_003_REG_COEF_C30, 0, register_width=2, lsb_first=False, signed=True)
-    _coeff_c31 = ROBits(12, SPA06_003_REG_COEF_C31, 4, register_width=2, lsb_first=False, signed=True)
-    _coeff_c40 = ROBits(12, SPA06_003_REG_COEF_C40, 0, register_width=2, lsb_first=False, signed=True)
+    _coeff_c00 = ROBits(
+        20, SPA06_003_REG_COEF_C00, 4, register_width=3, lsb_first=False, signed=True
+    )
+    _coeff_c10 = ROBits(
+        20, SPA06_003_REG_COEF_C10, 0, register_width=3, lsb_first=False, signed=True
+    )
+    _coeff_c01 = ROBits(
+        16, SPA06_003_REG_COEF_C01, 0, register_width=2, lsb_first=False, signed=True
+    )
+    _coeff_c11 = ROBits(
+        16, SPA06_003_REG_COEF_C11, 0, register_width=2, lsb_first=False, signed=True
+    )
+    _coeff_c20 = ROBits(
+        16, SPA06_003_REG_COEF_C20, 0, register_width=2, lsb_first=False, signed=True
+    )
+    _coeff_c21 = ROBits(
+        16, SPA06_003_REG_COEF_C21, 0, register_width=2, lsb_first=False, signed=True
+    )
+    _coeff_c30 = ROBits(
+        16, SPA06_003_REG_COEF_C30, 0, register_width=2, lsb_first=False, signed=True
+    )
+    _coeff_c31 = ROBits(
+        12, SPA06_003_REG_COEF_C31, 4, register_width=2, lsb_first=False, signed=True
+    )
+    _coeff_c40 = ROBits(
+        12, SPA06_003_REG_COEF_C40, 0, register_width=2, lsb_first=False, signed=True
+    )
 
     _pressure_oversampling = RWBits(3, SPA06_003_REG_PRS_CFG, 0)
     _pressure_shift_enabled = RWBit(SPA06_003_REG_CFG_REG, 2)
@@ -210,7 +236,9 @@ class SPA06_003_I2C:
     pressure_data_ready = ROBit(SPA06_003_REG_MEAS_CFG, 4)
     """Pressure data ready flag"""
 
-    _temperature_bits = ROBits(24, SPA06_003_REG_TMP_B2, 0, register_width=3, lsb_first=False, signed=True)
+    _temperature_bits = ROBits(
+        24, SPA06_003_REG_TMP_B2, 0, register_width=3, lsb_first=False, signed=True
+    )
     _temperature = ROUnaryStruct(SPA06_003_REG_TMP_B2, "<3s")
 
     def __init__(self, i2c_bus: I2C, address: int = SPA06_003_DEFAULT_ADDR):
