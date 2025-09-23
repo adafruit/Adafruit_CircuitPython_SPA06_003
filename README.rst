@@ -40,17 +40,11 @@ or individual libraries can be installed using
 
 
 
-.. todo:: Describe the Adafruit product this library works with. For PCBs, you can also add the
-image from the assets folder in the PCB's GitHub repo.
-
+Adafruit SPA06-003 Temperature + Pressure Sensor - STEMMA QT
 `Purchase one from the Adafruit shop <http://www.adafruit.com/products/6420>`_
 
 Installing from PyPI
 =====================
-.. note:: This library is not available on PyPI yet. Install documentation is included
-   as a standard element. Stay tuned for PyPI availability!
-
-.. todo:: Remove the above note if PyPI version is/will be available at time of release.
 
 On supported GNU/Linux systems like the Raspberry Pi, you can install the driver locally `from
 PyPI <https://pypi.org/project/adafruit-circuitpython-spa06-003/>`_.
@@ -101,8 +95,25 @@ Or the following command to update an existing version:
 Usage Example
 =============
 
-.. todo:: Add a quick, simple example. It and other examples should live in the
-examples folder and be included in docs/examples.rst.
+.. code-block:: python
+
+    import time
+
+    import board
+
+    from adafruit_spa06_003 import SPA06_003_I2C
+
+    i2c = board.I2C()
+    spa = SPA06_003_I2C(i2c)
+
+
+    while True:
+        if spa.temperature_data_ready and spa.pressure_data_ready:
+            print(f"Temperature: {spa.temperature} °C", end="   ")
+            print(f"Pressure: {spa.pressure}  hPa")
+
+        time.sleep(0.01)
+
 
 Documentation
 =============

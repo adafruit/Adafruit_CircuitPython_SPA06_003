@@ -16,19 +16,15 @@ Implementation Notes
 
 **Hardware:**
 
-.. todo:: Add links to any specific hardware product page(s), or category page(s).
-  Use unordered list & hyperlink rST inline format: "* `Link Text <url>`_"
+* `Adafruit SPA06-003 Temperature + Pressure Sensor - STEMMA QT <https://www.adafruit.com/product/6420>`_
 
 **Software and Dependencies:**
 
 * Adafruit CircuitPython firmware for the supported boards:
   https://circuitpython.org/downloads
 
-.. todo:: Uncomment or remove the Bus Device and/or the Register library dependencies
-  based on the library's use of either.
-
-# * Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
-# * Adafruit's Register library: https://github.com/adafruit/Adafruit_CircuitPython_Register
+* Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
+* Adafruit's Register library: https://github.com/adafruit/Adafruit_CircuitPython_Register
 """
 
 import time
@@ -162,6 +158,122 @@ class SPA06_003_I2C:
 
     :param busio.I2C i2c: I2C bus
     :param int address: I2C address
+
+    .. _measurement-rate-options:
+
+    Measurement Rate Options
+    =========================
+
+    .. list-table::
+       :header-rows: 1
+       :widths: 35 15 50
+
+       * - Constant Name
+         - Value
+         - Description
+       * - ``SPA06_003_RATE_1``
+         - ``0x00``
+         - 1 measurements per second
+       * - ``SPA06_003_RATE_2``
+         - ``0x01``
+         - 2 measurements per second
+       * - ``SPA06_003_RATE_4``
+         - ``0x02``
+         - 4 measurements per second
+       * - ``SPA06_003_RATE_8``
+         - ``0x03``
+         - 8 measurements per second
+       * - ``SPA06_003_RATE_16``
+         - ``0x04``
+         - 16 measurements per second
+       * - ``SPA06_003_RATE_32``
+         - ``0x05``
+         - 32 measurements per second
+       * - ``SPA06_003_RATE_64``
+         - ``0x06``
+         - 64 measurements per second
+       * - ``SPA06_003_RATE_128``
+         - ``0x07``
+         - 128 measurements per second
+       * - ``SPA06_003_RATE_25_16``
+         - ``0x08``
+         - 25/16 samples per second
+       * - ``SPA06_003_RATE_25_8``
+         - ``0x09``
+         - 25/8 samples per second
+       * - ``SPA06_003_RATE_25_4``
+         - ``0x0A``
+         - 25/4 samples per second
+       * - ``SPA06_003_RATE_25_2``
+         - ``0x0B``
+         - 25/2 samples per second
+       * - ``SPA06_003_RATE_25``
+         - ``0x0C``
+         - 25 samples per second
+       * - ``SPA06_003_RATE_50``
+         - ``0x0D``
+         - 50 samples per second
+       * - ``SPA06_003_RATE_100``
+         - ``0x0E``
+         - 100 samples per second
+       * - ``SPA06_003_RATE_200``
+         - ``0x0F``
+         - 200 samples per second
+
+    .. _oversampling-rate-options:
+
+    Oversampling Rate Options
+    =========================
+
+    .. list-table::
+       :header-rows: 1
+       :widths: 35 15 50
+
+       * - Constant Name
+         - Value
+         - Description
+       * - ``SPA06_003_OVERSAMPLE_1``
+         - ``0x00``
+         - Single (no oversampling)
+       * - ``SPA06_003_OVERSAMPLE_2``
+         - ``0x01``
+         - 2 times oversampling
+       * - ``SPA06_003_OVERSAMPLE_4``
+         - ``0x02``
+         - 4 times oversampling
+       * - ``SPA06_003_OVERSAMPLE_8``
+         - ``0x03``
+         - 8 times oversampling
+       * - ``SPA06_003_OVERSAMPLE_16``
+         - ``0x04``
+         - 16 times oversampling
+       * - ``SPA06_003_OVERSAMPLE_32``
+         - ``0x05``
+         - 32 times oversampling
+       * - ``SPA06_003_OVERSAMPLE_64``
+         - ``0x06``
+         - 64 times oversampling
+       * - ``SPA06_003_OVERSAMPLE_128``
+         - ``0x07``
+         - 128 times oversampling
+
+    Interrupt Polarity Options
+    ===========================
+
+    .. list-table::
+       :header-rows: 1
+       :widths: 35 15 50
+
+       * - Constant Name
+         - Value
+         - Description
+       * - ``SPA06_003_INT_ACTIVE_LOW``
+         - ``0x00``
+         - Interrupt active low
+       * - ``SPA06_003_INT_ACTIVE_HIGH``
+         - ``0x01``
+         - Interrupt active high
+
     """
 
     chip_id = ROBits(8, SPA06_003_REG_ID, 0)
@@ -210,13 +322,15 @@ class SPA06_003_I2C:
     _pressure_shift_enabled = RWBit(SPA06_003_REG_CFG_REG, 2)
 
     pressure_measure_rate = RWBits(4, SPA06_003_REG_PRS_CFG, 4)
-    """Pressure measurement rate. Must be one of the RATE constants."""
+    """Pressure measurement rate.
+    Must be one of the :ref:`RATE constants. <measurement-rate-options>`"""
 
     _temperature_oversampling = RWBits(3, SPA06_003_REG_TMP_CFG, 0)
     _temperature_shift_enabled = RWBit(SPA06_003_REG_CFG_REG, 3)
 
     temperature_measure_rate = RWBits(4, SPA06_003_REG_TMP_CFG, 4)
-    """Temperature measurement rate. Must be one of the RATE constants."""
+    """Temperature measurement rate.
+    Must be one of the :ref:`RATE constants. <measurement-rate-options>`"""
 
     fifo_interrupt = RWBit(SPA06_003_REG_CFG_REG, 6)
     """FIFO interrupt enable flag"""
@@ -228,7 +342,36 @@ class SPA06_003_I2C:
     """Pressure interrupt enable flag"""
 
     measurement_mode = RWBits(3, SPA06_003_REG_MEAS_CFG, 0)
-    """Measurement mode. Must be one of the MODE constants."""
+    """Measurement mode. Must be one of the MODE constants.
+
+    Measurement Mode Options
+    ========================
+
+    .. list-table::
+       :header-rows: 1
+       :widths: 45 15 40
+
+       * - Constant Name
+         - Value
+         - Description
+       * - ``SPA06_003_MEAS_MODE_IDLE``
+         - ``0x00``
+         - Idle / Stop background measurement
+       * - ``SPA06_003_MEAS_MODE_PRESSURE``
+         - ``0x01``
+         - Pressure measurement (Command Mode)
+       * - ``SPA06_003_MEAS_MODE_TEMPERATURE``
+         - ``0x02``
+         - Temperature measurement (Command Mode)
+       * - ``SPA06_003_MEAS_MODE_CONTINUOUS_PRESSURE``
+         - ``0x05``
+         - Continuous pressure measurement (Background Mode)
+       * - ``SPA06_003_MEAS_MODE_CONTINUOUS_TEMPERATURE``
+         - ``0x06``
+         - Continuous temperature measurement (Background Mode)
+       * - ``SPA06_003_MEAS_MODE_CONTINUOUS_BOTH``
+         - ``0x07``
+         - Continuous pressure and temperature measurement (Background Mode)"""
 
     temperature_data_ready = ROBit(SPA06_003_REG_MEAS_CFG, 5)
     """Temperature data ready flag"""
@@ -341,7 +484,8 @@ class SPA06_003_I2C:
 
     @property
     def pressure_oversampling(self):
-        """Pressure oversampling rate. Must be one of the OVERSAMPLE constants."""
+        """Pressure oversampling rate.
+        Must be one of the :ref:`OVERSAMPLE constants. <oversampling-rate-options>`"""
         return self._pressure_oversampling
 
     @pressure_oversampling.setter
@@ -354,7 +498,8 @@ class SPA06_003_I2C:
 
     @property
     def temperature_oversampling(self):
-        """Temperature oversampling rate. Must be one of the OVERSAMPLE constants."""
+        """Temperature oversampling rate.
+        Must be one of the :ref:`OVERSAMPLE constants. <oversampling-rate-options>`"""
         return self._temperature_oversampling
 
     @temperature_oversampling.setter
