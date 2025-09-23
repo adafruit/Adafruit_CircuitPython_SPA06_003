@@ -31,17 +31,21 @@ Implementation Notes
 # * Adafruit's Register library: https://github.com/adafruit/Adafruit_CircuitPython_Register
 """
 
-# imports
-
-__version__ = "0.0.0+auto.0"
-__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_SPA06_003.git"
-
 import time
 from micropython import const
 from adafruit_register.i2c_bits import ROBits, RWBits
 from adafruit_register.i2c_bit import ROBit, RWBit
 from adafruit_register.i2c_struct import ROUnaryStruct
 from adafruit_bus_device.i2c_device import I2CDevice
+
+try:
+    import typing
+    from busio import I2C
+except ImportError:
+    pass
+
+__version__ = "0.0.0+auto.0"
+__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_SPA06_003.git"
 
 SPA06_003_DEFAULT_ADDR = const(0x77)
 SPA06_003_ALTERNATE_ADDR = const(0x76)
@@ -120,12 +124,12 @@ SPA06_003_OVERSAMPLE_64 = const(0x06)  # 64 times
 SPA06_003_OVERSAMPLE_128 = const(0x07)  # 128 times
 
 # Measurement mode options
-SPA06_003_MEAS_IDLE = const(0x00)  # Idle / Stop background measurement
-SPA06_003_MEAS_PRESSURE = const(0x01)  # Pressure measurement (Command Mode)
-SPA06_003_MEAS_TEMPERATURE = const(0x02)  # Temperature measurement (Command Mode)
-SPA06_003_MEAS_CONTINUOUS_PRESSURE = const(0x05)  # Continuous pressure measurement (Background Mode)
-SPA06_003_MEAS_CONTINUOUS_TEMPERATURE = const(0x06)  # Continuous temperature measurement (Background Mode)
-SPA06_003_MEAS_CONTINUOUS_BOTH = const(0x07)  # Continuous pressure and temperature measurement (Background Mode)
+SPA06_003_MEAS_MODE_IDLE = const(0x00)  # Idle / Stop background measurement
+SPA06_003_MEAS_MODE_PRESSURE = const(0x01)  # Pressure measurement (Command Mode)
+SPA06_003_MEAS_MODE_TEMPERATURE = const(0x02)  # Temperature measurement (Command Mode)
+SPA06_003_MEAS_MODE_CONTINUOUS_PRESSURE = const(0x05)  # Continuous pressure measurement (Background Mode)
+SPA06_003_MEAS_MODE_CONTINUOUS_TEMPERATURE = const(0x06)  # Continuous temperature measurement (Background Mode)
+SPA06_003_MEAS_MODE_CONTINUOUS_BOTH = const(0x07)  # Continuous pressure and temperature measurement (Background Mode)
 
 # Interrupt polarity options
 SPA06_003_INT_ACTIVE_LOW = const(0x00)  # Interrupt active low
@@ -145,12 +149,24 @@ SPA06_003_SCALING_FACTORS_LUT = {
 
 
 class SPA06_003_I2C:
+    """
+    SPA06-003 temperature and pressure sensor breakout CircuitPython driver.
+
+    :param busio.I2C i2c: I2C bus
+    :param int address: I2C address
+    """
+
     chip_id = ROBits(8, SPA06_003_REG_ID, 0)
+    """Chip ID of the sensor"""
 
     soft_reset_cmd = RWBits(4, SPA06_003_REG_RESET, 0)
+    """Soft reset command"""
 
     coeff_ready = ROBit(SPA06_003_REG_MEAS_CFG, 7)
+    """Coefficient ready flag"""
+
     sensor_ready = ROBit(SPA06_003_REG_MEAS_CFG, 6)
+    """Sensor ready flag"""
 
     _coeff_c0 = ROBits(12, SPA06_003_REG_COEF_C0, 4, register_width=2, lsb_first=False, signed=True)
     _coeff_c1 = ROBits(12, SPA06_003_REG_COEF_C1, 0, register_width=2, lsb_first=False, signed=True)
@@ -165,28 +181,39 @@ class SPA06_003_I2C:
     _coeff_c40 = ROBits(12, SPA06_003_REG_COEF_C40, 0, register_width=2, lsb_first=False, signed=True)
 
     _pressure_oversampling = RWBits(3, SPA06_003_REG_PRS_CFG, 0)
-    pressure_shift_enabled = RWBit(SPA06_003_REG_CFG_REG, 2)
+    _pressure_shift_enabled = RWBit(SPA06_003_REG_CFG_REG, 2)
 
     pressure_measure_rate = RWBits(4, SPA06_003_REG_PRS_CFG, 4)
+    """Pressure measurement rate. Must be one of the RATE constants."""
 
     _temperature_oversampling = RWBits(3, SPA06_003_REG_TMP_CFG, 0)
-    temperature_shift_enabled = RWBit(SPA06_003_REG_CFG_REG, 3)
+    _temperature_shift_enabled = RWBit(SPA06_003_REG_CFG_REG, 3)
 
     temperature_measure_rate = RWBits(4, SPA06_003_REG_TMP_CFG, 4)
+    """Temperature measurement rate. Must be one of the RATE constants."""
 
     fifo_interrupt = RWBit(SPA06_003_REG_CFG_REG, 6)
+    """FIFO interrupt enable flag"""
+
     temperature_interrupt = RWBit(SPA06_003_REG_CFG_REG, 5)
+    """Temperature interrupt enable flag"""
+
     pressure_interrupt = RWBit(SPA06_003_REG_CFG_REG, 4)
+    """Pressure interrupt enable flag"""
 
     measurement_mode = RWBits(3, SPA06_003_REG_MEAS_CFG, 0)
+    """Measurement mode. Must be one of the MODE constants."""
 
     temperature_data_ready = ROBit(SPA06_003_REG_MEAS_CFG, 5)
+    """Temperature data ready flag"""
+
     pressure_data_ready = ROBit(SPA06_003_REG_MEAS_CFG, 4)
+    """Pressure data ready flag"""
 
     _temperature_bits = ROBits(24, SPA06_003_REG_TMP_B2, 0, register_width=3, lsb_first=False, signed=True)
     _temperature = ROUnaryStruct(SPA06_003_REG_TMP_B2, "<3s")
 
-    def __init__(self, i2c_bus, address=SPA06_003_DEFAULT_ADDR):
+    def __init__(self, i2c_bus: I2C, address: int = SPA06_003_DEFAULT_ADDR):
         try:
             self.i2c_device = I2CDevice(i2c_bus, address)
         except ValueError:
@@ -229,11 +256,11 @@ class SPA06_003_I2C:
         self.temperature_interrupt = True
 
         # Set measurement mode to continuous both
-        self.measurement_mode = SPA06_003_MEAS_CONTINUOUS_BOTH
-
+        self.measurement_mode = SPA06_003_MEAS_MODE_CONTINUOUS_BOTH
 
     @property
     def temperature(self):
+        """Temperature in Celsius"""
         temp_raw_signed = self._temperature_bits
         kT = SPA06_003_SCALING_FACTORS_LUT.get(self.temperature_oversampling, 524288)
         temp_raw_sc = float(temp_raw_signed) / kT
@@ -243,6 +270,7 @@ class SPA06_003_I2C:
 
     @property
     def pressure_oversampling(self):
+        """Pressure oversampling rate. Must be one of the OVERSAMPLE constants."""
         return self._pressure_oversampling
 
     @pressure_oversampling.setter
@@ -251,10 +279,11 @@ class SPA06_003_I2C:
             raise ValueError("Oversampling must be one of the OVERSAMPLING constants")
 
         self._pressure_oversampling = new_value
-        self.pressure_shift_enabled = new_value > SPA06_003_OVERSAMPLE_8
+        self._pressure_shift_enabled = new_value > SPA06_003_OVERSAMPLE_8
 
     @property
     def temperature_oversampling(self):
+        """Temperature oversampling rate. Must be one of the OVERSAMPLE constants."""
         return self._temperature_oversampling
 
     @temperature_oversampling.setter
@@ -263,28 +292,9 @@ class SPA06_003_I2C:
             raise ValueError("Oversampling must be one of the OVERSAMPLING constants")
 
         self._temperature_oversampling = new_value
-        self.temperature_shift_enabled = new_value > SPA06_003_OVERSAMPLE_8
+        self._temperature_shift_enabled = new_value > SPA06_003_OVERSAMPLE_8
 
     def reset(self):
+        """Performs soft reset on the sensor."""
         self.soft_reset_cmd = SPA06_003_CMD_RESET
         time.sleep(0.01)
-
-    def debug_temperature_read(self):
-        # Read raw bytes manually
-        buffer = bytearray(4)
-        buffer[0] = SPA06_003_REG_TMP_B2
-        with self.i2c_device as i2c:
-            i2c.write_then_readinto(buffer, buffer, out_end=1, in_start=1)
-
-        print(f"Raw bytes: {[hex(b) for b in buffer[1:]]}")
-
-        # Reconstruct the 24-bit value manually (MSB first)
-        raw_value = (buffer[1] << 16) | (buffer[2] << 8) | buffer[3]
-        print(f"Raw 24-bit value: {raw_value} (0x{raw_value:06x})")
-
-        # Apply sign extension like Arduino does
-        if raw_value & 0x800000:
-            raw_value |= 0xFF000000
-        signed_value = raw_value if raw_value < 0x80000000 else raw_value - 0x100000000
-        print(f"Sign-extended value: {signed_value}")
-        return signed_value
