@@ -399,20 +399,19 @@ class SPA06_003_I2C:
 
         while not self.sensor_ready or not self.coeff_ready:
             time.sleep(0.01)
-        print("Sensor and Coefficients ready.")
 
         # Coefficient values do not change, so just read them once
-        self.coeff_c0 = self._coeff_c0
-        self.coeff_c1 = self._coeff_c1
-        self.coeff_c00 = self._coeff_c00
-        self.coeff_c10 = self._coeff_c10
-        self.coeff_c01 = self._coeff_c01
-        self.coeff_c11 = self._coeff_c11
-        self.coeff_c20 = self._coeff_c20
-        self.coeff_c21 = self._coeff_c21
-        self.coeff_c30 = self._coeff_c30
-        self.coeff_c31 = self._coeff_c31
-        self.coeff_c40 = self._coeff_c40
+        self.coeff_c0 = float(self._coeff_c0)
+        self.coeff_c1 = float(self._coeff_c1)
+        self.coeff_c00 = float(self._coeff_c00)
+        self.coeff_c10 = float(self._coeff_c10)
+        self.coeff_c01 = float(self._coeff_c01)
+        self.coeff_c11 = float(self._coeff_c11)
+        self.coeff_c20 = float(self._coeff_c20)
+        self.coeff_c21 = float(self._coeff_c21)
+        self.coeff_c30 = float(self._coeff_c30)
+        self.coeff_c31 = float(self._coeff_c31)
+        self.coeff_c40 = float(self._coeff_c40)
 
         # Configure for highest precision and sample rate
         # Set pressure to highest oversampling (128x) and highest rate (200 Hz)
@@ -437,7 +436,7 @@ class SPA06_003_I2C:
         temp_raw_signed = self._temperature_bits
         kT = SPA06_003_SCALING_FACTORS_LUT.get(self.temperature_oversampling, 524288)
         temp_raw_sc = float(temp_raw_signed) / kT
-        temp_comp = float(self.coeff_c0) * 0.5 + float(self.coeff_c1) * temp_raw_sc
+        temp_comp = self.coeff_c0 * 0.5 + self.coeff_c1 * temp_raw_sc
 
         return temp_comp
 
@@ -465,17 +464,17 @@ class SPA06_003_I2C:
         # Pcomp = c00 + c10*Praw_sc + c20*Praw_sc^2 + c30*Praw_sc^3 + c40*Praw_sc^4 +
         #        Traw_sc*(c01 + c11*Praw_sc + c21*Praw_sc^2 + c31*Praw_sc^3)
         pres_comp = (
-            float(self.coeff_c00)
-            + float(self.coeff_c10) * pres_raw_sc
-            + float(self.coeff_c20) * pres_raw_sc_2
-            + float(self.coeff_c30) * pres_raw_sc_3
-            + float(self.coeff_c40) * pres_raw_sc_4
+            self.coeff_c00
+            + self.coeff_c10 * pres_raw_sc
+            + self.coeff_c20 * pres_raw_sc_2
+            + self.coeff_c30 * pres_raw_sc_3
+            + self.coeff_c40 * pres_raw_sc_4
             + temp_raw_sc
             * (
-                float(self.coeff_c01)
-                + float(self.coeff_c11) * pres_raw_sc
-                + float(self.coeff_c21) * pres_raw_sc_2
-                + float(self.coeff_c31) * pres_raw_sc_3
+                self.coeff_c01
+                + self.coeff_c11 * pres_raw_sc
+                + self.coeff_c21 * pres_raw_sc_2
+                + self.coeff_c31 * pres_raw_sc_3
             )
         )
 
