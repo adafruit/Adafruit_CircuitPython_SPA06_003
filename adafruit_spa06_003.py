@@ -30,15 +30,17 @@ Implementation Notes
 import time
 
 from adafruit_bus_device.i2c_device import I2CDevice
-from adafruit_register.i2c_bit import ROBit, RWBit
-from adafruit_register.i2c_bits import ROBits, RWBits
-from adafruit_register.i2c_struct import ROUnaryStruct
+from adafruit_bus_device.spi_device import SPIDevice
+from adafruit_register.register_accessor import I2CRegisterAccessor, SPIRegisterAccessor
+from adafruit_register.register_bit import ROBit, RWBit
+from adafruit_register.register_bits import ROBits, RWBits
 from micropython import const
 
 try:
     import typing
 
-    from busio import I2C
+    from busio import I2C, SPI
+    from digitalio import DigitalInOut
 except ImportError:
     pass
 
@@ -152,7 +154,7 @@ SPA06_003_SCALING_FACTORS_LUT = {
 }
 
 
-class SPA06_003_I2C:
+class SPA06_003:
     """
     SPA06-003 temperature and pressure sensor breakout CircuitPython driver.
 
@@ -386,11 +388,26 @@ class SPA06_003_I2C:
         24, SPA06_003_REG_PSR_B2, 0, register_width=3, lsb_first=False, signed=True
     )
 
-    def __init__(self, i2c_bus: I2C, address: int = SPA06_003_DEFAULT_ADDR):
-        try:
-            self.i2c_device = I2CDevice(i2c_bus, address)
-        except ValueError:
-            raise ValueError(f"No I2C device found at address 0x{address:02X}")
+    def __init__(
+        self,
+        i2c: I2C = None,
+        address: int = SPA06_003_DEFAULT_ADDR,
+        spi: SPI = None,
+        cs: DigitalInOut = None,
+    ):
+        if spi is not None and cs is not None:
+            try:
+                self.spi_device = SPIDevice(spi, cs, baudrate=1000000, phase=1, polarity=1)
+                self.register_accessor = SPIRegisterAccessor(self.spi_device)
+            except ValueError:
+                raise ValueError(f"No SPI device found.")
+
+        elif i2c is not None:
+            try:
+                i2c_device = I2CDevice(i2c, address)
+                self.register_accessor = I2CRegisterAccessor(i2c_device)
+            except ValueError:
+                raise ValueError(f"No I2C device found.")
 
         if self.chip_id != 0x11:
             raise ValueError("SPA06_003_I2C device not found")

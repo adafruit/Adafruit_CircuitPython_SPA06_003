@@ -1,15 +1,17 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 Tim Cocks for Adafruit Industries
 #
 # SPDX-License-Identifier: MIT
-
 import time
 
 import board
+from digitalio import DigitalInOut
 
 from adafruit_spa06_003 import SPA06_003
 
-i2c = board.I2C()
-spa = SPA06_003(i2c)
+spi = board.SPI()
+cs = DigitalInOut(board.D10)
+
+spa = SPA06_003(spi=spi, cs=cs)
 
 
 while True:
