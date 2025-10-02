@@ -17,4 +17,4 @@ while True:
         print(f"Temperature: {spa.temperature} °C", end="   ")
         print(f"Pressure: {spa.pressure}  hPa")
 
-    time.sleep(0.1)
+    time.sleep(1.0)
