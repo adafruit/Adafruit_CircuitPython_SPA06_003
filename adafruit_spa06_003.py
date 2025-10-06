@@ -37,7 +37,7 @@ from adafruit_register.register_bits import ROBits, RWBits
 from micropython import const
 
 try:
-    import typing
+    from typing import Union
 
     from busio import I2C, SPI
     from digitalio import DigitalInOut
@@ -158,8 +158,7 @@ class SPA06_003:
     """
     SPA06-003 temperature and pressure sensor breakout CircuitPython driver.
 
-    :param busio.I2C i2c: I2C bus
-    :param int address: I2C address
+    :param bus_device: Instance of I2CDevice or SPIDevice
 
     .. _measurement-rate-options:
 
@@ -388,29 +387,23 @@ class SPA06_003:
         24, SPA06_003_REG_PSR_B2, 0, register_width=3, lsb_first=False, signed=True
     )
 
-    def __init__(
-        self,
-        i2c: I2C = None,
-        address: int = SPA06_003_DEFAULT_ADDR,
-        spi: SPI = None,
-        cs: DigitalInOut = None,
-    ):
-        if spi is not None and cs is not None:
+    def __init__(self, bus_device: Union[I2CDevice, SPIDevice]):
+        if isinstance(bus_device, SPIDevice):
             try:
-                self.spi_device = SPIDevice(spi, cs, baudrate=1000000, phase=1, polarity=1)
-                self.register_accessor = SPIRegisterAccessor(self.spi_device)
+                self.register_accessor = SPIRegisterAccessor(bus_device)
             except ValueError:
                 raise ValueError(f"No SPI device found.")
 
-        elif i2c is not None:
+        elif isinstance(bus_device, I2CDevice):
             try:
-                i2c_device = I2CDevice(i2c, address)
-                self.register_accessor = I2CRegisterAccessor(i2c_device)
+                self.register_accessor = I2CRegisterAccessor(bus_device)
             except ValueError:
                 raise ValueError(f"No I2C device found.")
+        else:
+            raise ValueError("bus_device must be an instance of I2CDevice or SPIDevice.")
 
         if self.chip_id != 0x11:
-            raise ValueError("SPA06_003_I2C device not found")
+            raise ValueError("Error Reading Chip ID. Device not found.")
 
         self.reset()
 
@@ -530,3 +523,14 @@ class SPA06_003:
         """Performs soft reset on the sensor."""
         self.soft_reset_cmd = SPA06_003_CMD_RESET
         time.sleep(0.01)
+
+
+class SPA06_003_I2C(SPA06_003):
+    def __init__(self, i2c: I2C, address: int = SPA06_003_DEFAULT_ADDR):
+        i2c_device = I2CDevice(i2c, address)
+        print(
+            "Warning: SPA06_003_I2C class is deprecated and will be removed in a future version. "
+            "User code should be updated to initialize I2CDevice externally and pass it to "
+            "SPA06_003 class constructor."
+        )
+        super().__init__(i2c_device)

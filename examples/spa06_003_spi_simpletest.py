@@ -4,6 +4,7 @@
 import time
 
 import board
+from adafruit_bus_device.spi_device import SPIDevice
 from digitalio import DigitalInOut
 
 from adafruit_spa06_003 import SPA06_003
@@ -11,7 +12,8 @@ from adafruit_spa06_003 import SPA06_003
 spi = board.SPI()
 cs = DigitalInOut(board.D10)
 
-spa = SPA06_003(spi=spi, cs=cs)
+spi_device = SPIDevice(spi, cs)
+spa = SPA06_003(spi_device)
 
 
 while True:
