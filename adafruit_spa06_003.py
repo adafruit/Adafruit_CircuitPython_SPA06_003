@@ -34,12 +34,12 @@ from adafruit_bus_device.spi_device import SPIDevice
 from adafruit_register.register_accessor import I2CRegisterAccessor, SPIRegisterAccessor
 from adafruit_register.register_bit import ROBit, RWBit
 from adafruit_register.register_bits import ROBits, RWBits
+from busio import I2C
 from micropython import const
 
 try:
     from typing import Union
 
-    from busio import I2C, SPI
     from digitalio import DigitalInOut
 except ImportError:
     pass
@@ -387,18 +387,26 @@ class SPA06_003:
         24, SPA06_003_REG_PSR_B2, 0, register_width=3, lsb_first=False, signed=True
     )
 
-    def __init__(self, bus_device: Union[I2CDevice, SPIDevice]):
-        if isinstance(bus_device, SPIDevice):
+    def __init__(self, bus_or_device: Union[I2C, I2CDevice, SPIDevice]):
+        if isinstance(bus_or_device, SPIDevice):
             try:
-                self.register_accessor = SPIRegisterAccessor(bus_device)
+                self._configure_spi_device(bus_or_device)
+                self.register_accessor = SPIRegisterAccessor(bus_or_device)
             except ValueError:
                 raise ValueError(f"No SPI device found.")
 
-        elif isinstance(bus_device, I2CDevice):
+        elif isinstance(bus_or_device, I2CDevice):
             try:
-                self.register_accessor = I2CRegisterAccessor(bus_device)
+                self.register_accessor = I2CRegisterAccessor(bus_or_device)
             except ValueError:
                 raise ValueError(f"No I2C device found.")
+        elif isinstance(bus_or_device, I2C):
+            try:
+                i2c_device = I2CDevice(bus_or_device, SPA06_003_DEFAULT_ADDR)
+                self.register_accessor = I2CRegisterAccessor(i2c_device)
+            except ValueError:
+                raise ValueError(f"No I2C device found.")
+
         else:
             raise ValueError("bus_device must be an instance of I2CDevice or SPIDevice.")
 
@@ -439,6 +447,11 @@ class SPA06_003:
 
         # Set measurement mode to continuous both
         self.measurement_mode = SPA06_003_MEAS_MODE_CONTINUOUS_BOTH
+
+    @staticmethod
+    def _configure_spi_device(spi_device: SPIDevice):
+        spi_device.polarity = 1
+        spi_device.phase = 1
 
     @property
     def temperature(self):

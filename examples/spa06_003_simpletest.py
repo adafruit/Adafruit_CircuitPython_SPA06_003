@@ -5,14 +5,19 @@
 import time
 
 import board
-from adafruit_bus_device.i2c_device import I2CDevice
 
-from adafruit_spa06_003 import SPA06_003, SPA06_003_DEFAULT_ADDR
+from adafruit_spa06_003 import SPA06_003
 
 i2c = board.I2C()
-i2c_device = I2CDevice(i2c, SPA06_003_DEFAULT_ADDR)
-spa = SPA06_003(i2c_device)
 
+# Initialize with default I2C Address
+spa = SPA06_003(i2c)
+
+# Initialize with alternate I2C Address
+# from adafruit_bus_device.i2c_device import I2CDevice
+# from adafruit_spa06_003 import SPA06_003_ALTERNATE_ADDR
+# i2c_device = I2CDevice(i2c, SPA06_003_ALTERNATE_ADDR)
+# spa = SPA06_003(i2c_device)
 
 while True:
     if spa.temperature_data_ready and spa.pressure_data_ready:
