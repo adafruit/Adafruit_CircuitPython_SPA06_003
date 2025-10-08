@@ -9,15 +9,14 @@ import board
 from adafruit_spa06_003 import SPA06_003
 
 i2c = board.I2C()
+# i2c = board.STEMMA_I2C()
 
 # Initialize with default I2C Address
-spa = SPA06_003(i2c)
+spa = SPA06_003.over_i2c(i2c)
 
 # Initialize with alternate I2C Address
-# from adafruit_bus_device.i2c_device import I2CDevice
 # from adafruit_spa06_003 import SPA06_003_ALTERNATE_ADDR
-# i2c_device = I2CDevice(i2c, SPA06_003_ALTERNATE_ADDR)
-# spa = SPA06_003(i2c_device)
+# spa = SPA06_003.over_i2c(i2c, address=SPA06_003_ALTERNATE_ADDR)
 
 while True:
     if spa.temperature_data_ready and spa.pressure_data_ready:
