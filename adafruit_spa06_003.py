@@ -30,15 +30,18 @@ Implementation Notes
 import time
 
 from adafruit_bus_device.i2c_device import I2CDevice
-from adafruit_register.i2c_bit import ROBit, RWBit
-from adafruit_register.i2c_bits import ROBits, RWBits
-from adafruit_register.i2c_struct import ROUnaryStruct
+from adafruit_bus_device.spi_device import SPIDevice
+from adafruit_register.register_accessor import I2CRegisterAccessor, SPIRegisterAccessor
+from adafruit_register.register_bit import ROBit, RWBit
+from adafruit_register.register_bits import ROBits, RWBits
+from busio import I2C
 from micropython import const
 
 try:
-    import typing
+    from typing import Union
 
-    from busio import I2C
+    from busio import SPI
+    from digitalio import DigitalInOut
 except ImportError:
     pass
 
@@ -152,12 +155,11 @@ SPA06_003_SCALING_FACTORS_LUT = {
 }
 
 
-class SPA06_003_I2C:
+class SPA06_003:
     """
     SPA06-003 temperature and pressure sensor breakout CircuitPython driver.
 
-    :param busio.I2C i2c: I2C bus
-    :param int address: I2C address
+    :param bus_device: Instance of I2CDevice or SPIDevice
 
     .. _measurement-rate-options:
 
@@ -386,14 +388,42 @@ class SPA06_003_I2C:
         24, SPA06_003_REG_PSR_B2, 0, register_width=3, lsb_first=False, signed=True
     )
 
-    def __init__(self, i2c_bus: I2C, address: int = SPA06_003_DEFAULT_ADDR):
-        try:
-            self.i2c_device = I2CDevice(i2c_bus, address)
-        except ValueError:
-            raise ValueError(f"No I2C device found at address 0x{address:02X}")
+    @staticmethod
+    def over_spi(spi: SPI, cs: DigitalInOut):
+        """
+        Initialize SPA06_003 breakout over SPI bus.
+
+        :param spi: busio.SPI instance to communicate over
+        :param cs: DigitalInOut instance to use for chip select
+        :return: Initialized SPA06_003 object
+        """
+        spi_device = SPIDevice(spi, cs, phase=1, polarity=1)
+        return SPA06_003(spi_device)
+
+    @staticmethod
+    def over_i2c(i2c: I2C, address=SPA06_003_DEFAULT_ADDR):
+        """
+        Initialize SPA06_003 breakout over I2C bus.
+
+        :param i2c: busio.I2C instance to communicate over
+        :param address: The I2C address to use. Defaults to SPA06_003_DEFAULT_ADDR
+        :return: Initialized SPA06_003 object
+        """
+        i2c_device = I2CDevice(i2c, address)
+        return SPA06_003(i2c_device)
+
+    def __init__(self, bus_device: Union[I2CDevice, SPIDevice]):
+        if isinstance(bus_device, SPIDevice):
+            self.register_accessor = SPIRegisterAccessor(bus_device)
+
+        elif isinstance(bus_device, I2CDevice):
+            self.register_accessor = I2CRegisterAccessor(bus_device)
+
+        else:
+            raise ValueError("bus_device must be an instance of I2CDevice or SPIDevice.")
 
         if self.chip_id != 0x11:
-            raise ValueError("SPA06_003_I2C device not found")
+            raise ValueError("Error Reading Chip ID. Device not found.")
 
         self.reset()
 
@@ -513,3 +543,21 @@ class SPA06_003_I2C:
         """Performs soft reset on the sensor."""
         self.soft_reset_cmd = SPA06_003_CMD_RESET
         time.sleep(0.01)
+
+
+def SPA06_003_I2C(i2c: I2C, address: int = SPA06_003_DEFAULT_ADDR):
+    """
+    SPA06_003_I2C Deprecated fallback driver for warning message.
+
+    :param i2c: busio.I2C instance to communicate over
+    :param address: I2C address to use. Defaults to SPA06_003_DEFAULT_ADDR
+    """
+
+    import warnings  # noqa: PLC0415, import outside top level
+
+    warnings.warn(
+        "Warning: SPA06_003_I2C class is deprecated and will be removed in a future version. "
+        "User code should be updated to use SPA06_003.over_i2c()"
+    )
+
+    return SPA06_003.over_i2c(i2c, address)
