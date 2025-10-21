@@ -414,16 +414,11 @@ class SPA06_003:
 
     def __init__(self, bus_device: Union[I2CDevice, SPIDevice]):
         if isinstance(bus_device, SPIDevice):
-            try:
-                self.register_accessor = SPIRegisterAccessor(bus_device)
-            except ValueError:
-                raise ValueError(f"No SPI device found.")
+            self.register_accessor = SPIRegisterAccessor(bus_device)
 
         elif isinstance(bus_device, I2CDevice):
-            try:
-                self.register_accessor = I2CRegisterAccessor(bus_device)
-            except ValueError:
-                raise ValueError(f"No I2C device found.")
+            self.register_accessor = I2CRegisterAccessor(bus_device)
+
         else:
             raise ValueError("bus_device must be an instance of I2CDevice or SPIDevice.")
 
@@ -550,19 +545,19 @@ class SPA06_003:
         time.sleep(0.01)
 
 
-class SPA06_003_I2C(SPA06_003):
+def SPA06_003_I2C(i2c: I2C, address: int = SPA06_003_DEFAULT_ADDR):
     """
-    SPA06_003_I2C Deprecated fallback driver class for warning message.
+    SPA06_003_I2C Deprecated fallback driver for warning message.
 
     :param i2c: busio.I2C instance to communicate over
     :param address: I2C address to use. Defaults to SPA06_003_DEFAULT_ADDR
     """
 
-    def __init__(self, i2c: I2C, address: int = SPA06_003_DEFAULT_ADDR):
-        i2c_device = I2CDevice(i2c, address)
-        print(
-            "Warning: SPA06_003_I2C class is deprecated and will be removed in a future version. "
-            "User code should be updated to initialize I2CDevice externally and pass it to "
-            "SPA06_003 class constructor."
-        )
-        super().__init__(i2c_device)
+    import warnings  # noqa: PLC0415, import outside top level
+
+    warnings.warn(
+        "Warning: SPA06_003_I2C class is deprecated and will be removed in a future version. "
+        "User code should be updated to use SPA06_003.over_i2c()"
+    )
+
+    return SPA06_003.over_i2c(i2c, address)
